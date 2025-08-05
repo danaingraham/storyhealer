@@ -1,0 +1,21 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  # Required for Prisma
+  SKIP_ENV_VALIDATION = "1"
+  
+[functions]
+  node_bundler = "esbuild"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Environment variables that need to be set in Netlify dashboard:
+# - NEXTAUTH_SECRET
+# - NEXTAUTH_URL 
+# - DATABASE_URL
+# - OPENAI_API_KEY
+# - GOOGLE_CLIENT_ID
+# - GOOGLE_CLIENT_SECRET
