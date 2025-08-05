@@ -1,103 +1,131 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
+import { ArrowRight, BookOpen, Sparkles, Camera, Shield, Heart, Stars } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen flex flex-col gradient-bg">
+      <Header />
+      
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="container mx-auto px-4 py-20 text-center">
+          <div className="max-w-4xl mx-auto animate-fade-in">
+            <h1 className="font-fredoka text-5xl md:text-6xl lg:text-7xl font-bold mb-6">
+              Help Your Child <span className="text-gradient">Conquer Their Fears</span>
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-700 mb-8">
+              Create personalized AI-powered storybooks where your child becomes the brave hero of their own adventure
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/story/create" className="btn-primary inline-flex items-center">
+                Create Your Story
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+              <Link href="/sample" className="btn-secondary inline-flex items-center">
+                <BookOpen className="mr-2 h-5 w-5" />
+                View Sample Story
+              </Link>
+            </div>
+          </div>
+        </section>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
+        {/* How It Works */}
+        <section className="py-20 bg-white/50 backdrop-blur-sm">
+          <div className="container mx-auto px-4">
+            <h2 className="font-fredoka text-4xl md:text-5xl font-bold text-center mb-16">
+              How It <span className="text-gradient">Works</span>
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              <div className="text-center card-hover p-8 rounded-2xl bg-white shadow-lg">
+                <div className="w-20 h-20 mx-auto mb-6 bg-pink-100 rounded-full flex items-center justify-center">
+                  <Camera className="h-10 w-10 text-pink-500" />
+                </div>
+                <h3 className="font-fredoka text-2xl font-semibold mb-4">Create Character</h3>
+                <p className="text-gray-600">
+                  Upload a photo or describe your child to create their personalized hero character
+                </p>
+              </div>
+              <div className="text-center card-hover p-8 rounded-2xl bg-white shadow-lg">
+                <div className="w-20 h-20 mx-auto mb-6 bg-purple-100 rounded-full flex items-center justify-center">
+                  <Shield className="h-10 w-10 text-purple-500" />
+                </div>
+                <h3 className="font-fredoka text-2xl font-semibold mb-4">Share Their Fear</h3>
+                <p className="text-gray-600">
+                  Tell us what your child is afraid of - darkness, swimming, school, or anything else
+                </p>
+              </div>
+              <div className="text-center card-hover p-8 rounded-2xl bg-white shadow-lg">
+                <div className="w-20 h-20 mx-auto mb-6 bg-indigo-100 rounded-full flex items-center justify-center">
+                  <Sparkles className="h-10 w-10 text-indigo-500" />
+                </div>
+                <h3 className="font-fredoka text-2xl font-semibold mb-4">Magic Happens</h3>
+                <p className="text-gray-600">
+                  Our AI creates a beautiful 6-page illustrated story with your child as the brave hero
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Features */}
+        <section className="py-20">
+          <div className="container mx-auto px-4">
+            <h2 className="font-fredoka text-4xl md:text-5xl font-bold text-center mb-16">
+              Why Parents <span className="text-gradient">Love StoryHealer</span>
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+              <div className="glassmorphism p-6 rounded-xl">
+                <Heart className="h-8 w-8 text-pink-500 mb-4" />
+                <h3 className="font-semibold text-lg mb-2">Personalized Stories</h3>
+                <p className="text-gray-600 text-sm">
+                  Every story is unique to your child's appearance and specific fears
+                </p>
+              </div>
+              <div className="glassmorphism p-6 rounded-xl">
+                <Camera className="h-8 w-8 text-purple-500 mb-4" />
+                <h3 className="font-semibold text-lg mb-2">Photo-Based Characters</h3>
+                <p className="text-gray-600 text-sm">
+                  Upload a photo and watch your child come to life in the illustrations
+                </p>
+              </div>
+              <div className="glassmorphism p-6 rounded-xl">
+                <BookOpen className="h-8 w-8 text-indigo-500 mb-4" />
+                <h3 className="font-semibold text-lg mb-2">6-Page Adventures</h3>
+                <p className="text-gray-600 text-sm">
+                  Perfect length for bedtime stories that build confidence
+                </p>
+              </div>
+              <div className="glassmorphism p-6 rounded-xl">
+                <Stars className="h-8 w-8 text-pink-500 mb-4" />
+                <h3 className="font-semibold text-lg mb-2">AI-Illustrated</h3>
+                <p className="text-gray-600 text-sm">
+                  Beautiful, child-friendly illustrations that bring the story to life
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-20 bg-gradient-to-r from-pink-500 to-purple-600 text-white">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="font-fredoka text-4xl md:text-5xl font-bold mb-6">
+              Ready to Help Your Child Be Brave?
+            </h2>
+            <p className="text-xl mb-8 max-w-2xl mx-auto">
+              Join thousands of parents who are helping their children overcome fears through the power of personalized storytelling
+            </p>
+            <Link href="/story/create" className="btn-secondary inline-flex items-center text-lg">
+              Start Creating Now
+              <Sparkles className="ml-2 h-5 w-5" />
+            </Link>
+          </div>
+        </section>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+      <Footer />
     </div>
   );
 }
