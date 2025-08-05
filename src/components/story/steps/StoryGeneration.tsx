@@ -112,24 +112,25 @@ export function StoryGeneration({ characterData, storyData }: StoryGenerationPro
       setStoryId(story.id);
       updateStepStatus("story", "completed");
 
-      // Step 3: Generate illustrations
+      // Step 3: Start generating illustrations in background
       updateStepStatus("illustrations", "in-progress");
       
-      const illustrationsResponse = await fetchWithTimeout(`/api/stories/${story.id}/illustrations`, {
+      // Fire off illustration generation but don't wait for it
+      fetch(`/api/stories/${story.id}/illustrations`, {
         method: "POST",
-      }, 120000); // 2 minute timeout for illustrations
+      }).then(() => {
+        console.log("Illustration generation started in background");
+      }).catch((error) => {
+        console.error("Failed to start illustration generation:", error);
+      });
 
-      if (!illustrationsResponse.ok) {
-        const errorData = await illustrationsResponse.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to generate illustrations (${illustrationsResponse.status})`);
-      }
-
+      // Mark as completed (they'll generate in background)
       updateStepStatus("illustrations", "completed");
 
-      // Redirect to story viewer after a brief delay
+      // Redirect to story viewer immediately
       setTimeout(() => {
         router.push(`/story/${story.id}`);
-      }, 2000);
+      }, 1500);
 
     } catch (error) {
       console.error("Story generation failed:", error);

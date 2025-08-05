@@ -198,7 +198,73 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(stories);
+    // Sanitize all string fields to prevent JSON corruption
+    const sanitizeString = (str: any): any => {
+      if (typeof str !== 'string') return str;
+      // Remove control characters and ensure proper escaping
+      return str
+        .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+        .replace(/\\/g, '\\\\') // Escape backslashes
+        .replace(/"/g, '\\"') // Escape quotes
+        .replace(/\n/g, '\\n') // Escape newlines
+        .replace(/\r/g, '\\r') // Escape carriage returns
+        .replace(/\t/g, '\\t'); // Escape tabs
+    };
+
+    const sanitizeObject = (obj: any): any => {
+      if (obj === null || obj === undefined) return obj;
+      if (typeof obj === 'string') return sanitizeString(obj);
+      if (Array.isArray(obj)) return obj.map(sanitizeObject);
+      if (obj instanceof Date) return obj.toISOString();
+      if (typeof obj === 'object') {
+        const sanitized: any = {};
+        for (const [key, value] of Object.entries(obj)) {
+          sanitized[key] = sanitizeObject(value);
+        }
+        return sanitized;
+      }
+      return obj;
+    };
+
+    console.log(`Sanitizing ${stories.length} stories...`);
+    const sanitizedStories = stories.map(story => sanitizeObject(story));
+
+    // Test JSON serialization before returning
+    try {
+      const jsonString = JSON.stringify(sanitizedStories);
+      console.log(`JSON serialization successful: ${jsonString.length} characters`);
+      
+      // If the response is too large, truncate page text
+      if (jsonString.length > 10000000) { // 10MB limit
+        console.log('Response too large, truncating page content...');
+        for (const story of sanitizedStories) {
+          if (story.pages) {
+            for (const page of story.pages) {
+              if (page.text && page.text.length > 1000) {
+                page.text = page.text.substring(0, 1000) + '...';
+              }
+              if (page.illustrationPrompt && page.illustrationPrompt.length > 500) {
+                page.illustrationPrompt = page.illustrationPrompt.substring(0, 500) + '...';
+              }
+            }
+          }
+        }
+      }
+    } catch (jsonError) {
+      console.error("JSON serialization still failed after sanitization:", jsonError);
+      // Return minimal data
+      return NextResponse.json(
+        sanitizedStories.map(s => ({
+          id: s.id,
+          title: s.title,
+          createdAt: s.createdAt,
+          childId: s.childId,
+          generationStatus: s.generationStatus
+        }))
+      );
+    }
+
+    return NextResponse.json(sanitizedStories);
   } catch (error) {
     console.error("Failed to fetch stories:", error);
     return NextResponse.json(

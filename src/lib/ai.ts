@@ -219,21 +219,31 @@ export function generateIllustrationPrompt(
   appearance: string,
   pageContext?: string
 ): string {
+  // Emphasize consistency and exact appearance to prevent diversity modifications
   return `
-    Create a detailed children's book illustration that directly depicts this story text: "${pageContext}"
+    Create a children's book illustration showing EXACTLY this specific child character throughout the entire story:
     
-    MAIN CHARACTER: ${childName} - ${appearance}
+    CRITICAL - EXACT CHARACTER APPEARANCE (must be consistent across all pages):
+    Name: ${childName}
+    EXACT Appearance: ${appearance}
     
-    SCENE DESCRIPTION: ${basePrompt}
+    IMPORTANT: This is the SAME child character ${childName} who appears in every page of this story. 
+    DO NOT change their ethnicity, skin color, hair color, or any physical features between pages.
+    The character must look EXACTLY as described above - maintain complete consistency.
     
-    ILLUSTRATION REQUIREMENTS:
-    - Show exactly what is happening in the story text: "${pageContext}"
-    - Include the main character ${childName} with this appearance: ${appearance}
-    - Professional children's book illustration style (like modern picture books)
-    - Warm, inviting colors that match the story mood
-    - Clear, detailed scene that children can easily understand
-    - Show the character's emotions and actions from the text
-    - Include relevant background elements mentioned in the story
+    SCENE TO ILLUSTRATE: "${pageContext}"
+    
+    SCENE DETAILS: ${basePrompt}
+    
+    STYLE REQUIREMENTS:
+    - Professional children's book illustration (like modern picture books)
+    - Warm, friendly, colorful style
+    - Show the character's emotions matching the story text
+    - Include background elements from the scene
+    - Child-friendly and age-appropriate
+    
+    REMEMBER: The character ${childName} must look EXACTLY the same as described in the appearance above. 
+    No variations in ethnicity, features, or physical characteristics.
     
     VISUAL STYLE:
     - High-quality digital illustration style

@@ -31,6 +31,7 @@ interface Story {
   pages: Array<{
     pageNumber: number;
     illustrationUrl?: string;
+    userUploadedImageUrl?: string;
   }>;
 }
 
@@ -49,16 +50,34 @@ export default function Dashboard() {
     }
   }, [status, router]);
 
+  // Poll for illustration updates if any stories are missing cover images
+  useEffect(() => {
+    if (!stories.length) return;
+
+    const storiesWithoutCovers = stories.filter(
+      story => !story.pages[0]?.illustrationUrl && !story.pages[0]?.userUploadedImageUrl
+    );
+
+    if (storiesWithoutCovers.length > 0) {
+      const interval = setInterval(() => {
+        fetchStories();
+      }, 10000); // Poll every 10 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [stories]);
+
   const fetchStories = async () => {
     try {
       console.log("🔄 Fetching stories from /api/stories...");
-      const response = await fetch("/api/stories");
+      const response = await fetch("/api/stories", {
+        cache: 'no-store' // Ensure fresh data
+      });
       console.log("📡 Response status:", response.status, response.ok);
       
       if (response.ok) {
         const data = await response.json();
         console.log("📚 Stories received:", data?.length, "stories");
-        console.log("📋 Stories data:", data);
         setStories(data);
         console.log("✅ Stories set in state");
       } else {
@@ -171,11 +190,11 @@ export default function Dashboard() {
                   key={story.id}
                   className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden card-hover"
                 >
-                  {/* Cover Image */}
+                  {/* Cover Image - Use first page image (user uploaded or generated) */}
                   <div className="h-48 bg-gradient-to-br from-pink-100 to-purple-100 relative">
-                    {story.pages[0]?.illustrationUrl ? (
+                    {story.pages[0]?.userUploadedImageUrl || story.pages[0]?.illustrationUrl ? (
                       <Image
-                        src={story.pages[0].illustrationUrl}
+                        src={story.pages[0]?.userUploadedImageUrl || story.pages[0]?.illustrationUrl || ''}
                         alt={`${story.title} cover`}
                         fill
                         className="object-cover"
