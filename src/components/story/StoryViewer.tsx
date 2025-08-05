@@ -370,6 +370,14 @@ export function StoryViewer({ storyId, isPublic = false, shareToken }: StoryView
                   </button>
 
                   <button
+                    onClick={() => setShowInsertDialog(true)}
+                    className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                    title="Insert New Page"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+
+                  <button
                     onClick={() => setShowEditModal(true)}
                     className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-all duration-200"
                     title="Edit Story"
