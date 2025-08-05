@@ -252,19 +252,26 @@ export function StoryViewer({ storyId, isPublic = false, shareToken }: StoryView
   };
 
   const handleDownloadPDF = async () => {
+    if (!story) return;
+    
     try {
-      const response = await fetch(`/api/stories/${storyId}/pdf`);
+      const response = await fetch(`/api/stories/${story.id}/pdf`, {
+        method: 'POST',
+      });
+      
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        a.download = `${story?.title || 'story'}.pdf`;
+        a.download = `${story.title || 'story'}.pdf`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
       console.error('Error downloading PDF:', error);
