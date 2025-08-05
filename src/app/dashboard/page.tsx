@@ -51,15 +51,26 @@ export default function Dashboard() {
 
   const fetchStories = async () => {
     try {
+      console.log("🔄 Fetching stories from /api/stories...");
       const response = await fetch("/api/stories");
+      console.log("📡 Response status:", response.status, response.ok);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log("📚 Stories received:", data?.length, "stories");
+        console.log("📋 Stories data:", data);
         setStories(data);
+        console.log("✅ Stories set in state");
+      } else {
+        console.error("❌ Response not ok:", response.status, response.statusText);
+        const errorText = await response.text();
+        console.error("❌ Error response:", errorText);
       }
     } catch (error) {
-      console.error("Failed to fetch stories:", error);
+      console.error("❌ Failed to fetch stories:", error);
     } finally {
       setLoading(false);
+      console.log("🏁 Loading set to false");
     }
   };
 
