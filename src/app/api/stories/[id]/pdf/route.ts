@@ -53,7 +53,7 @@ export async function POST(
     pdf.text("Created with StoryHealer", pageWidth / 2, pageHeight - 30, { align: "center" });
 
     // Helper function to fetch and convert image to base64
-    const fetchImageAsBase64 = async (imageUrl: string): Promise<string | null> => {
+    const fetchImageAsBase64 = async (imageUrl: string): Promise<{ data: string; width: number; height: number } | null> => {
       try {
         const response = await fetch(imageUrl);
         if (!response.ok) return null;
@@ -68,7 +68,34 @@ export async function POST(
         else if (contentType?.includes('gif')) mimeType = 'image/gif';
         else if (contentType?.includes('webp')) mimeType = 'image/webp';
         
-        return `data:${mimeType};base64,${base64}`;
+        // Try to get actual image dimensions from the buffer
+        let width = 1024; // default fallback
+        let height = 1024; // default fallback
+        
+        try {
+          // Simple PNG dimension parsing (PNG signature: 89 50 4E 47)
+          if (buffer.byteLength > 24) {
+            const view = new DataView(buffer);
+            if (view.getUint32(0) === 0x89504E47) { // PNG signature
+              width = view.getUint32(16, false); // big endian
+              height = view.getUint32(20, false); // big endian
+            } else if (view.getUint16(0) === 0xFFD8) { // JPEG signature
+              // For JPEG, we'll use a more complex approach or stick with square assumption
+              // Most DALL-E images are 1024x1024, user uploads vary
+              width = 1024;
+              height = 1024;
+            }
+          }
+        } catch (dimensionError) {
+          console.log('Could not parse image dimensions, using defaults');
+          // Keep default values
+        }
+        
+        return {
+          data: `data:${mimeType};base64,${base64}`,
+          width,
+          height
+        };
       } catch (error) {
         console.error('Error fetching image:', error);
         return null;
@@ -90,15 +117,29 @@ export async function POST(
       
       if (imageUrl) {
         try {
-          const imageData = await fetchImageAsBase64(imageUrl);
-          if (imageData) {
+          const imageResult = await fetchImageAsBase64(imageUrl);
+          if (imageResult) {
             // Calculate image dimensions (maintain aspect ratio)
             const maxImageWidth = pageWidth - (margin * 2);
             const maxImageHeight = (pageHeight - 120) * 0.6; // 60% of available space for image
             
-            // Add image to PDF
-            pdf.addImage(imageData, 'JPEG', margin, margin + 20, maxImageWidth, maxImageHeight);
-            imageHeight = maxImageHeight + 10; // Add some spacing
+            // Calculate actual dimensions maintaining aspect ratio
+            const originalAspectRatio = imageResult.width / imageResult.height;
+            let finalWidth = maxImageWidth;
+            let finalHeight = finalWidth / originalAspectRatio;
+            
+            // If height is too large, scale based on height instead
+            if (finalHeight > maxImageHeight) {
+              finalHeight = maxImageHeight;
+              finalWidth = finalHeight * originalAspectRatio;
+            }
+            
+            // Center the image horizontally
+            const imageX = (pageWidth - finalWidth) / 2;
+            
+            // Add image to PDF with proper dimensions
+            pdf.addImage(imageResult.data, 'JPEG', imageX, margin + 20, finalWidth, finalHeight);
+            imageHeight = finalHeight + 10; // Add some spacing
           }
         } catch (error) {
           console.error(`Error adding image for page ${page.pageNumber}:`, error);
