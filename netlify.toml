@@ -14,7 +14,7 @@
 
 # Environment variables that need to be set in Netlify dashboard:
 # - NEXTAUTH_SECRET
-# - NEXTAUTH_URL 
+# - NEXTAUTH_URL (https://storyhealer.netlify.app)
 # - DATABASE_URL
 # - OPENAI_API_KEY
 # - GOOGLE_CLIENT_ID
