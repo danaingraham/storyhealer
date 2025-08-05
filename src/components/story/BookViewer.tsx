@@ -9,7 +9,9 @@ interface StoryPage {
   pageNumber: number;
   text: string;
   illustrationUrl?: string;
-  userUploadedImageUrl?: string;
+  illustrationPrompt: string;
+  charactersInScene: string[];
+  userUploadedImageUrl?: string | null;
 }
 
 interface BookViewerProps {

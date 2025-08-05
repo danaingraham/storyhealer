@@ -177,6 +177,39 @@ export function StoryViewer({ storyId, isPublic = false, shareToken }: StoryView
     setCurrentPage(newPage);
   };
 
+  const handleInsertPage = async (position: "before" | "after", pageNumber: number) => {
+    if (!story) return;
+
+    try {
+      const response = await fetch(`/api/stories/${story.id}/pages/insert`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          position,
+          pageNumber,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to insert page");
+      }
+
+      const result = await response.json();
+      
+      // Refresh the story to get the updated pages
+      await fetchStory();
+      
+      // Navigate to the newly inserted page
+      const newPageNumber = position === "before" ? pageNumber : pageNumber + 1;
+      setCurrentPage(newPageNumber);
+    } catch (error) {
+      console.error("Failed to insert page:", error);
+      alert("Failed to insert page. Please try again.");
+    }
+  };
+
   const handleShare = async () => {
     if (!story) return;
 
@@ -360,14 +393,17 @@ export function StoryViewer({ storyId, isPublic = false, shareToken }: StoryView
       {/* Page Overview Modal */}
       {showPageOverview && story && (
         <PageOverview
-          story={story}
+          pages={story.pages}
           isOpen={showPageOverview}
           onClose={() => setShowPageOverview(false)}
-          onPageSelect={(pageNumber) => {
+          onReorderPages={(newOrder) => {
+            // Update story with new page order
+            setStory({ ...story, pages: newOrder });
+          }}
+          onPageClick={(pageNumber) => {
             setCurrentPage(pageNumber);
             setShowPageOverview(false);
           }}
-          currentPage={currentPage}
         />
       )}
 
@@ -376,18 +412,16 @@ export function StoryViewer({ storyId, isPublic = false, shareToken }: StoryView
         <InsertPageDialog
           isOpen={showInsertDialog}
           onClose={() => setShowInsertDialog(false)}
-          storyId={story.id}
+          onInsert={handleInsertPage}
           currentPage={currentPage}
           totalPages={story.pages.length}
-          onStoryUpdate={fetchStory}
         />
       )}
 
       {/* AI Agent */}
       {!isPublic && session && story && (
         <AIAgent
-          storyId={story.id}
-          currentPage={currentPage}
+          story={story}
           onStoryUpdate={fetchStory}
         />
       )}
