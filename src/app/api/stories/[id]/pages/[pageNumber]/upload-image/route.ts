@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string; pageNumber: string } }
+  { params }: { params: Promise<{ id: string; pageNumber: string }> }
 ) {
   try {
     console.log("Upload image API called with params:", params);
@@ -86,7 +86,7 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; pageNumber: string } }
+  { params }: { params: Promise<{ id: string; pageNumber: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
