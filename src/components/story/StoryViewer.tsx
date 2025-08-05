@@ -10,7 +10,9 @@ import {
   Home,
   Plus,
   Trash2,
-  Grid3X3
+  Grid3X3,
+  Camera,
+  X
 } from "lucide-react";
 import Link from "next/link";
 import { PageImageUpload } from "./PageImageUpload";
@@ -61,6 +63,7 @@ export function StoryViewer({ storyId, isPublic = false, shareToken }: StoryView
   const [showInsertDialog, setShowInsertDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPageOverview, setShowPageOverview] = useState(false);
+  const [showImageUpload, setShowImageUpload] = useState(false);
   const [illustrationsLoading, setIllustrationsLoading] = useState<Set<number>>(new Set());
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
@@ -210,6 +213,30 @@ export function StoryViewer({ storyId, isPublic = false, shareToken }: StoryView
     }
   };
 
+  const handleImageUploaded = (imageUrl: string) => {
+    // Update the local state to show the uploaded image immediately
+    if (story) {
+      const updatedPages = story.pages.map(page => 
+        page.pageNumber === currentPage 
+          ? { ...page, userUploadedImageUrl: imageUrl }
+          : page
+      );
+      setStory({ ...story, pages: updatedPages });
+    }
+  };
+
+  const handleImageRemoved = () => {
+    // Update the local state to remove the uploaded image
+    if (story) {
+      const updatedPages = story.pages.map(page => 
+        page.pageNumber === currentPage 
+          ? { ...page, userUploadedImageUrl: null }
+          : page
+      );
+      setStory({ ...story, pages: updatedPages });
+    }
+  };
+
   const handleShare = async () => {
     if (!story) return;
 
@@ -335,6 +362,14 @@ export function StoryViewer({ storyId, isPublic = false, shareToken }: StoryView
                   </button>
 
                   <button
+                    onClick={() => setShowImageUpload(true)}
+                    className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                    title="Upload Photo for Current Page"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </button>
+
+                  <button
                     onClick={() => setShowEditModal(true)}
                     className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-all duration-200"
                     title="Edit Story"
@@ -416,6 +451,38 @@ export function StoryViewer({ storyId, isPublic = false, shareToken }: StoryView
           currentPage={currentPage}
           totalPages={story.pages.length}
         />
+      )}
+
+      {/* Page Image Upload Modal */}
+      {showImageUpload && !isPublic && session && story && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">
+                Upload Photo for Page {currentPage}
+              </h3>
+              <button
+                onClick={() => setShowImageUpload(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <PageImageUpload
+              storyId={story.id}
+              pageNumber={currentPage}
+              currentImage={story.pages.find(p => p.pageNumber === currentPage)?.userUploadedImageUrl}
+              onImageUploaded={(imageUrl) => {
+                handleImageUploaded(imageUrl);
+                setShowImageUpload(false);
+              }}
+              onImageRemoved={() => {
+                handleImageRemoved();
+                setShowImageUpload(false);
+              }}
+            />
+          </div>
+        </div>
       )}
 
       {/* AI Agent */}
