@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     ];
     
     // Simple hash function to consistently return the same image for the same prompt
-    const hash = prompt.split('').reduce((a, b) => {
+    const hash = prompt.split('').reduce((a: number, b: string) => {
       a = ((a << 5) - a) + b.charCodeAt(0);
       return a & a;
     }, 0);

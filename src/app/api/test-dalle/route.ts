@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         status: "success",
         message: "DALL-E API is working correctly!",
-        imageUrl: response.data[0].url
+        imageUrl: response.data?.[0]?.url
       });
     } catch (error: any) {
       console.error("DALL-E test error:", error);

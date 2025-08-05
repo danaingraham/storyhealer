@@ -232,7 +232,7 @@ export function StoryGeneration({ characterData, storyData }: StoryGenerationPro
               </p>
             </div>
             <div className="flex-shrink-0 ml-4">
-              {React.cloneElement(step.icon as React.ReactElement, {
+              {React.isValidElement(step.icon) && React.cloneElement(step.icon, {
                 className: `h-5 w-5 ${
                   step.status === "completed"
                     ? "text-green-500"
@@ -242,7 +242,7 @@ export function StoryGeneration({ characterData, storyData }: StoryGenerationPro
                     ? "text-pink-500"
                     : "text-gray-400"
                 }`,
-              })}
+              } as any)}
             </div>
           </div>
         ))}

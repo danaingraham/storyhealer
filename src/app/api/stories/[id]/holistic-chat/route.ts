@@ -196,7 +196,7 @@ export async function POST(
         - Child: ${story.child.name}, age ${story.child.age}
         - Theme: Overcoming fear of ${story.fearDescription}
         - Current pages: ${story.pages.length}
-        - Current page texts: ${story.pages.map(p => `Page ${p.pageNumber}: "${p.text}"`).join('\n')}
+        - Current page texts: ${story.pages.map((p: any) => `Page ${p.pageNumber}: "${p.text}"`).join('\n')}
         
         Explain what this change would involve and ask for confirmation. Be specific about:
         1. What parts of the story would change
@@ -255,7 +255,7 @@ STORY INFO:
 USER REQUEST: "${instruction}"
 
 CURRENT PAGES AND THEIR VISUAL CONTENT:
-${story.pages.map(p => `
+${story.pages.map((p: any) => `
 Page ${p.pageNumber}:
 - Current text: "${p.text}"
 - Visual description: "${p.illustrationPrompt}"
