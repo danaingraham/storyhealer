@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -80,10 +80,19 @@ export default function Dashboard() {
         console.log("📚 Stories received:", data?.length, "stories");
         setStories(data);
         console.log("✅ Stories set in state");
+      } else if (response.status === 401) {
+        console.error("🔒 Authentication failed - session may have expired");
+        // Clear any cached stories first
+        setStories([]);
+        // Trigger re-authentication
+        await signIn('google', { callbackUrl: '/dashboard' });
+        return;
       } else {
         console.error("❌ Response not ok:", response.status, response.statusText);
         const errorText = await response.text();
         console.error("❌ Error response:", errorText);
+        // For other errors, still set empty array to show "no stories" message
+        setStories([]);
       }
     } catch (error) {
       console.error("❌ Failed to fetch stories:", error);
