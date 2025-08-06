@@ -16,12 +16,15 @@ export const authOptions: NextAuthOptions = {
     session: async ({ session, token, user }) => {
       if (session?.user) {
         // Use the database user ID, not the provider ID
-        session.user.id = token.uid || user?.id || token.sub;
+        const userId = (token.uid as string) || (user?.id as string) || (token.sub as string);
+        if (userId) {
+          session.user.id = userId;
+        }
       }
       return session;
     },
     jwt: async ({ user, token, account, profile }) => {
-      if (user) {
+      if (user?.id) {
         // Store the database user ID in the token
         token.uid = user.id;
       }
