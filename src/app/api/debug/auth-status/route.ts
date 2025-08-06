@@ -30,6 +30,17 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Also check what user ID formats exist in database
+    let allUserIds: string[] = [];
+    try {
+      const users = await prisma.user.findMany({
+        select: { id: true, email: true }
+      });
+      allUserIds = users.map(u => `${u.id} (${u.email})`);
+    } catch (e) {
+      // Ignore
+    }
+
     return NextResponse.json({
       timestamp: new Date().toISOString(),
       session: {
@@ -38,7 +49,9 @@ export async function GET(request: NextRequest) {
         userId: session?.user?.id || null,
         userEmail: session?.user?.email || null,
         userName: session?.user?.name || null,
+        rawSession: session, // Show full session for debugging
       },
+      userIds: allUserIds,
       database: {
         connectionStatus: dbConnectionStatus,
         totalUsers: userCount,

@@ -13,14 +13,16 @@ export const authOptions: NextAuthOptions = {
   ],
   debug: process.env.NODE_ENV === "development",
   callbacks: {
-    session: async ({ session, token }) => {
-      if (session?.user && token?.sub) {
-        session.user.id = token.sub;
+    session: async ({ session, token, user }) => {
+      if (session?.user) {
+        // Use the database user ID, not the provider ID
+        session.user.id = token.uid || user?.id || token.sub;
       }
       return session;
     },
-    jwt: async ({ user, token }) => {
+    jwt: async ({ user, token, account, profile }) => {
       if (user) {
+        // Store the database user ID in the token
         token.uid = user.id;
       }
       return token;
