@@ -9,7 +9,7 @@ async function testStoryGeneration() {
   try {
     console.log('Testing story generation...');
     
-    const response = await fetch('http://localhost:3000/api/stories', {
+    const response = await fetch('http://localhost:3001/api/stories', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

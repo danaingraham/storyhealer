@@ -9,7 +9,7 @@ async function testOpenAI() {
   const apiKey = process.env.OPENAI_API_KEY;
   
   console.log('API Key found:', !!apiKey);
-  console.log('API Key prefix:', apiKey?.substring(0, 20) + '...');
+  console.log('API Key prefix:', apiKey?.substring(0, 15) + '...');
   
   if (!apiKey) {
     console.error('No API key found in environment');
