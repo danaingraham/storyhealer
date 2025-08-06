@@ -117,12 +117,17 @@ async function analyzeUserIntent(message: string, currentPage: any, story: any) 
     USER MESSAGE: "${message}"
     
     INSTRUCTIONS:
-    - DEFAULT to "text" unless explicitly about images
-    - ONLY use "image" if they specifically mention: picture, image, illustration, visual, drawing, art, colors, scene visuals
+    - DEFAULT to "text" unless explicitly about images or visual styles
+    - Use "image" if they mention: picture, image, illustration, visual, drawing, art, colors, scene visuals, style changes
     - Use "text" for: story changes, making things exciting/scary/happy, character actions, dialogue, plot changes, emotions
     - Use "both" only if they explicitly want both text AND image changes
     - Use "global" only for permanent character appearance changes (hair, height, clothing style)
     - Use "unclear" only if completely unrelated to story editing
+    
+    STYLE CHANGE DETECTION:
+    - Art style mentions (cartoon, realistic, watercolor, sketch, digital art, anime) → image
+    - Color scheme changes (bright, dark, pastel, vibrant, monochrome) → image  
+    - Visual mood changes affecting appearance (dreamy, magical, scary visuals) → image
     
     EXAMPLES:
     - "Make it more exciting" → text
@@ -133,6 +138,9 @@ async function analyzeUserIntent(message: string, currentPage: any, story: any) 
     - "Add a rainbow to the picture" → image
     - "Change the illustration" → image
     - "Update the drawing" → image
+    - "Make it cartoon style" → image
+    - "Use watercolor style" → image
+    - "Make the colors more vibrant" → image
     - "Make text more exciting and add rainbow to image" → both
     - "Change character hair color permanently" → global
     
@@ -164,10 +172,16 @@ async function analyzeUserIntent(message: string, currentPage: any, story: any) 
       console.error(`[CHAT] Failed to parse intent:`, e);
       console.error(`[CHAT] Raw data:`, result.data);
       
-      // Fallback: be very conservative about image changes
+      // Fallback: improved detection for image and style changes
       const msg = message.toLowerCase();
-      if (msg.includes('picture') || msg.includes('image') || msg.includes('illustration') || 
-          msg.includes('visual') || msg.includes('drawing') || msg.includes('art')) {
+      const imageKeywords = ['picture', 'image', 'illustration', 'visual', 'drawing', 'art'];
+      const styleKeywords = ['style', 'cartoon', 'realistic', 'watercolor', 'sketch', 'digital', 'anime', 'bright', 'dark', 'pastel', 'vibrant', 'monochrome', 'colorful'];
+      
+      const hasImageKeywords = imageKeywords.some(keyword => msg.includes(keyword));
+      const hasStyleKeywords = styleKeywords.some(keyword => msg.includes(keyword));
+      
+      if (hasImageKeywords || hasStyleKeywords) {
+        console.log(`[CHAT] Fallback detected image/style change for: "${message}"`);
         return { 
           success: true, 
           data: { updateType: 'image', instruction: message, scope: 'current_page' }
@@ -334,18 +348,32 @@ async function updateStoryText(story: any, currentPage: any, instruction: string
 
 async function updateStoryImage(story: any, currentPage: any, instruction: string) {
   const prompt = `
-    Update this illustration prompt based on the user's instruction.
+    You are helping update a children's story illustration. Analyze the user's instruction and determine what type of illustration change they want.
     
-    Current prompt: "${currentPage.illustrationPrompt}"
+    Current illustration prompt: "${currentPage.illustrationPrompt}"
     Character: ${story.child.name} - ${story.child.appearanceDescription}
     Page text: "${currentPage.text}"
+    Story theme: Overcoming fear of ${story.fearDescription}
     
     User instruction: "${instruction}"
     
-    Return an updated illustration prompt that incorporates the requested changes.
+    DETECT STYLE CHANGES:
+    - If the user mentions art style changes (cartoon, realistic, watercolor, oil painting, sketch, digital art, anime, etc.), this is a STYLE change
+    - If the user mentions color scheme changes (bright, dark, pastel, vibrant, monochrome, etc.), this is a STYLE change  
+    - If the user mentions mood changes (happy, scary, dreamy, magical, etc.), this could affect STYLE
+    - If the user mentions specific visual elements (add rainbow, change background, different clothing), this is a CONTENT change
+    
+    INSTRUCTIONS:
+    - For STYLE changes: Create a completely new illustration prompt that maintains the story content but applies the new visual style
+    - For CONTENT changes: Modify the existing prompt to incorporate the new visual elements
+    - Always maintain character consistency with ${story.child.name} and their appearance
+    - Keep the illustration age-appropriate for a ${story.child.age}-year-old
+    - Ensure the illustration supports the story's theme of overcoming fears
+    
+    Return ONLY the updated illustration prompt as plain text. Do NOT wrap in JSON or quotes.
   `;
 
-  console.log(`[CHAT] Calling LLM to update illustration prompt...`);
+  console.log(`[CHAT] Calling LLM to update illustration prompt with style detection...`);
   const result = await invokeLLM(prompt);
   console.log(`[CHAT] LLM result for illustration:`, result);
   
@@ -353,7 +381,11 @@ async function updateStoryImage(story: any, currentPage: any, instruction: strin
     try {
       const newPrompt = typeof result.data === 'string' ? result.data.trim() : JSON.stringify(result.data);
       
-      // Generate new illustration
+      // Check if this is a significant style change by comparing prompts
+      const isStyleChange = detectStyleChange(currentPage.illustrationPrompt, newPrompt, instruction);
+      console.log(`[CHAT] Style change detected: ${isStyleChange}`);
+      
+      // Generate new illustration with enhanced prompt
       const enhancedPrompt = generateIllustrationPrompt(
         newPrompt,
         story.child.name,
@@ -363,7 +395,16 @@ async function updateStoryImage(story: any, currentPage: any, instruction: strin
       
       console.log(`[CHAT] Enhanced prompt length:`, enhancedPrompt.length);
       console.log(`[CHAT] Generating image with enhanced prompt...`);
-      const imageResult = await generateImage(enhancedPrompt);
+      
+      // For style changes, we might want to generate multiple attempts or use different parameters
+      let imageResult;
+      if (isStyleChange) {
+        console.log(`[CHAT] Processing as style change - using enhanced generation`);
+        imageResult = await generateImageWithStyleChange(enhancedPrompt, instruction);
+      } else {
+        imageResult = await generateImage(enhancedPrompt);
+      }
+      
       console.log(`[CHAT] Image generation result:`, imageResult);
       
       if (imageResult.success && imageResult.data?.url) {
@@ -377,8 +418,12 @@ async function updateStoryImage(story: any, currentPage: any, instruction: strin
         });
         console.log(`[CHAT] Successfully updated page illustration in database`);
         
+        const responseMessage = isStyleChange ? 
+          "I've updated the illustration with your new style! The image should appear with the new visual approach shortly." :
+          "I've updated the illustration for this page! The new image should appear shortly.";
+        
         return {
-          response: "I've updated the illustration for this page! The new image should appear shortly.",
+          response: responseMessage,
           updated: true,
         };
       } else {
@@ -462,4 +507,50 @@ async function updateGlobalCharacteristic(story: any, instruction: string) {
     response: "I had trouble understanding the global change you wanted.",
     updated: false,
   };
+}
+
+function detectStyleChange(oldPrompt: string, newPrompt: string, userInstruction: string): boolean {
+  const styleKeywords = [
+    'style', 'cartoon', 'realistic', 'watercolor', 'oil painting', 'sketch', 
+    'digital art', 'anime', 'manga', 'impressionist', 'abstract', 'minimalist',
+    'bright', 'dark', 'pastel', 'vibrant', 'monochrome', 'colorful', 'black and white',
+    'happy', 'scary', 'dreamy', 'magical', 'mysterious', 'cheerful', 'gloomy',
+    'art style', 'drawing style', 'painting style', 'visual style'
+  ];
+  
+  const instruction = userInstruction.toLowerCase();
+  const hasStyleKeywords = styleKeywords.some(keyword => instruction.includes(keyword));
+  
+  // Check if the prompts are significantly different in style-related content
+  const oldStyle = extractStyleElements(oldPrompt);
+  const newStyle = extractStyleElements(newPrompt);
+  const hasSignificantStyleChange = oldStyle !== newStyle;
+  
+  console.log(`[CHAT] Style detection - Keywords: ${hasStyleKeywords}, Significant change: ${hasSignificantStyleChange}`);
+  
+  return hasStyleKeywords || hasSignificantStyleChange;
+}
+
+function extractStyleElements(prompt: string): string {
+  const stylePattern = /\b(cartoon|realistic|watercolor|oil painting|sketch|digital art|anime|bright|dark|pastel|vibrant|monochrome|dreamy|magical|mysterious|cheerful|gloomy)\b/gi;
+  const matches = prompt.match(stylePattern);
+  return matches ? matches.join(' ').toLowerCase() : '';
+}
+
+async function generateImageWithStyleChange(enhancedPrompt: string, styleInstruction: string) {
+  // For style changes, we might want to add extra style emphasis to the prompt
+  const styleEnhancedPrompt = `${enhancedPrompt} Style note: ${styleInstruction}`;
+  
+  console.log(`[CHAT] Generating image with style-enhanced prompt...`);
+  
+  // Try generating the image with the style-enhanced prompt
+  const result = await generateImage(styleEnhancedPrompt);
+  
+  if (!result.success) {
+    // Fallback to regular prompt if style-enhanced fails
+    console.log(`[CHAT] Style-enhanced generation failed, trying regular prompt...`);
+    return await generateImage(enhancedPrompt);
+  }
+  
+  return result;
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { X, MessageCircle, Image as ImageIcon, FileText, Send, Loader2 } from "lucide-react";
+import { X, MessageCircle, Image as ImageIcon, FileText, Send, Loader2, Upload } from "lucide-react";
+import { PageImageUpload } from "./PageImageUpload";
 
 interface EditStoryModalProps {
   isOpen: boolean;
@@ -228,44 +229,89 @@ export function EditStoryModal({
                 </div>
               ) : (
                 <div className="h-full flex flex-col">
-                  <div className="mb-4">
-                    <h5 className="font-medium text-gray-800 mb-2">Image Editing Instructions</h5>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Describe how you want to change the illustration. Focus on visual elements, colors, and scene details.
+                  {/* Upload Your Own Image Section */}
+                  <div className="mb-6">
+                    <h5 className="font-medium text-gray-800 mb-2 flex items-center">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Your Own Image
+                    </h5>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Replace the illustration with your own photo or image.
                     </p>
-                    <div className="text-xs text-gray-500 space-y-1">
-                      <p>• "Add a rainbow in the background"</p>
-                      <p>• "Make the character look happier"</p>
-                      <p>• "Change the scene to be outdoors"</p>
+                    <PageImageUpload
+                      storyId={story.id}
+                      pageNumber={currentPage}
+                      currentImage={currentPageData?.userUploadedImageUrl}
+                      onImageUploaded={(imageUrl) => {
+                        setLastResponse("Your image has been uploaded successfully! The page will refresh automatically.");
+                        setTimeout(() => {
+                          onStoryUpdate();
+                        }, 500);
+                      }}
+                      onImageRemoved={() => {
+                        setLastResponse("Your uploaded image has been removed. The AI illustration will be restored.");
+                        setTimeout(() => {
+                          onStoryUpdate();
+                        }, 500);
+                      }}
+                    />
+                  </div>
+
+                  {/* Divider */}
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300" />
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white text-gray-500">OR</span>
                     </div>
                   </div>
-                  
+
+                  {/* AI Image Editing Section */}
                   <div className="flex-1 flex flex-col">
-                    <textarea
-                      value={imageFeedback}
-                      onChange={(e) => setImageFeedback(e.target.value)}
-                      placeholder="Describe how you want to change the illustration..."
-                      className="flex-1 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-                      disabled={isProcessing}
-                    />
+                    <div className="mb-4">
+                      <h5 className="font-medium text-gray-800 mb-2 flex items-center">
+                        <ImageIcon className="h-4 w-4 mr-2" />
+                        AI Image Editing
+                      </h5>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Describe how you want to change the illustration. Focus on visual elements, colors, and scene details.
+                      </p>
+                      <div className="text-xs text-gray-500 space-y-1">
+                        <p>• "Add a rainbow in the background"</p>
+                        <p>• "Make the character look happier"</p>
+                        <p>• "Change the scene to be outdoors"</p>
+                        <p>• "Make it cartoon style" or "Use watercolor style"</p>
+                      </div>
+                    </div>
                     
-                    <button
-                      onClick={() => handleSubmit("image")}
-                      disabled={!imageFeedback.trim() || isProcessing}
-                      className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
-                    >
-                      {isProcessing ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Updating Image...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="h-4 w-4 mr-2" />
-                          Update Image
-                        </>
-                      )}
-                    </button>
+                    <div className="flex-1 flex flex-col">
+                      <textarea
+                        value={imageFeedback}
+                        onChange={(e) => setImageFeedback(e.target.value)}
+                        placeholder="Describe how you want to change the illustration..."
+                        className="flex-1 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                        disabled={isProcessing}
+                      />
+                      
+                      <button
+                        onClick={() => handleSubmit("image")}
+                        disabled={!imageFeedback.trim() || isProcessing}
+                        className="mt-4 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                      >
+                        {isProcessing ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            Updating Image...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="h-4 w-4 mr-2" />
+                            Update Image
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
